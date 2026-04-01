@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Expense Tracker">
+<meta name="theme-color" content="#0a0a0a">
+<title>Business Expense Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0f;
+  --bg2: #1a1a1a;
+  --bg3: #242424;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0f0f0;
+  --text2: #888;
+  --text3: #555;
+  --accent: #4ade80;
+  --accent2: #22c55e;
+  --accent-dim: rgba(74,222,128,0.12);
+  --blue: #60a5fa;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --purple: #a78bfa;
+  --pink: #f472b6;
+  --teal: #2dd4bf;
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --r: 16px;
+  --r-sm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: var(--font); color: var(--text); }
+
+/* APP SHELL */
+.app { display: flex; flex-direction: column; height: 100%; height: 100dvh; }
+.statusbar { height: var(--safe-top); background: var(--bg); flex-shrink: 0; }
+
+/* HEADER */
+.header { padding: 12px 20px 10px; flex-shrink: 0; }
+.header-row { display: flex; justify-content: space-between; align-items: flex-end; }
+.app-title { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; }
+.app-title span { color: var(--accent); }
+.header-sub { font-size: 12px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.02em; }
+
+/* TABS */
+.tabs { display: flex; padding: 0 16px 12px; gap: 6px; flex-shrink: 0; }
+.tab { flex: 1; padding: 9px 4px; border: 0.5px solid var(--border); border-radius: 10px; background: var(--bg2); color: var(--text3); font-size: 12px; font-weight: 500; cursor: pointer; font-family: var(--font); transition: all 0.15s; letter-spacing: 0.01em; }
+.tab.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+/* SCROLLABLE CONTENT */
+.content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px; padding-bottom: calc(16px + var(--safe-bottom)); }
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* STAT CARDS */
+.stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--r); padding: 14px; }
+.stat-label { font-size: 11px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; }
+.stat-val { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+.stat-val.green { color: var(--accent); }
+.stat-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+/* FORM CARD */
+.form-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 14px; }
+.form-section { font-size: 11px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+.field { margin-bottom: 12px; }
+.field-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.field-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+input, select { width: 100%; padding: 11px 13px; background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--r-sm); color: var(--text); font-size: 15px; font-family: var(--font); -webkit-appearance: none; appearance: none; outline: none; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+input:focus, select:focus { border-color: var(--accent); }
+input::placeholder { color: var(--text3); }
+.info-note { font-size: 11px; color: var(--text3); background: var(--bg3); border-radius: var(--r-sm); padding: 8px 10px; margin-top: -4px; margin-bottom: 12px; line-height: 1.5; border-left: 2px solid var(--accent); }
+
+/* BUTTONS */
+.btn-primary { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: var(--r-sm); color: #000; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); letter-spacing: -0.2px; transition: opacity 0.15s; }
+.btn-primary:active { opacity: 0.8; transform: scale(0.99); }
+.btn-secondary { width: 100%; padding: 13px; background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--r-sm); color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; font-family: var(--font); margin-bottom: 8px; transition: opacity 0.15s; }
+.btn-secondary:active { opacity: 0.7; }
+
+/* ENTRY ITEMS */
+.list-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; }
+.list-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 10px; border-bottom: 0.5px solid var(--border); }
+.list-month { font-size: 13px; font-weight: 500; color: var(--text); }
+.list-month-total { font-size: 13px; font-weight: 600; color: var(--accent); font-family: var(--mono); }
+.entry { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; border-bottom: 0.5px solid var(--border); }
+.entry:last-child { border-bottom: none; }
+.entry-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.cat-pill { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.entry-info { min-width: 0; }
+.entry-name { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.entry-meta { font-size: 11px; color: var(--text3); margin-top: 1px; font-family: var(--mono); }
+.entry-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.entry-amt { font-size: 14px; font-weight: 500; color: var(--text); font-family: var(--mono); }
+.del-btn { background: none; border: none; color: var(--text3); font-size: 20px; line-height: 1; cursor: pointer; padding: 0 2px; }
+.del-btn:active { color: var(--red); }
+
+/* REPORT */
+.section-title { font-size: 11px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.bar-label { font-size: 12px; color: var(--text2); width: 88px; flex-shrink: 0; }
+.bar-track { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(.4,0,.2,1); }
+.bar-val { font-size: 12px; color: var(--text); width: 58px; text-align: right; flex-shrink: 0; font-family: var(--mono); }
+.mth-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+.mth-table th { font-size: 10px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; text-align: right; padding: 0 0 8px; font-weight: 400; }
+.mth-table th:first-child { text-align: left; }
+.mth-table td { padding: 8px 0; border-top: 0.5px solid var(--border); text-align: right; color: var(--text2); }
+.mth-table td:first-child { text-align: left; color: var(--text); }
+.mth-table tr.total td { border-top: 1px solid var(--border2); color: var(--text); font-weight: 600; }
+.mth-table tr.total td:last-child { color: var(--accent); }
+
+/* EXPORT */
+.csv-box { background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--r-sm); padding: 12px; font-family: var(--mono); font-size: 11px; color: var(--text3); line-height: 1.6; max-height: 160px; overflow-y: auto; -webkit-overflow-scrolling: touch; word-break: break-all; margin-bottom: 10px; }
+.filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.filter-label { font-size: 12px; color: var(--text3); white-space: nowrap; }
+.filter-row select { flex: 1; font-size: 13px; padding: 8px 32px 8px 10px; }
+
+/* NO DATA */
+.no-data { text-align: center; padding: 40px 0 20px; color: var(--text3); font-size: 14px; }
+.no-data-icon { font-size: 36px; margin-bottom: 10px; }
+
+/* TOAST */
+.toast { position: fixed; bottom: calc(20px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(10px); background: var(--bg3); border: 0.5px solid var(--border2); color: var(--text); padding: 10px 20px; border-radius: 100px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.25s; pointer-events: none; white-space: nowrap; z-index: 999; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* INSTALL BANNER */
+.install-banner { background: var(--accent-dim); border: 0.5px solid var(--accent); border-radius: var(--r); padding: 14px 16px; margin-bottom: 14px; display: flex; gap: 12px; align-items: flex-start; }
+.install-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+.install-text { flex: 1; }
+.install-title { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+.install-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.install-close { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 0; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="statusbar"></div>
+
+  <div class="header">
+    <div class="header-row">
+      <div>
+        <div class="app-title">Expense<span>.</span></div>
+        <div class="header-sub">CRA Business Tracker · Free forever</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('log')">Log</button>
+    <button class="tab" onclick="showTab('history')">History</button>
+    <button class="tab" onclick="showTab('report')">Report</button>
+    <button class="tab" onclick="showTab('export')">Export</button>
+  </div>
+
+  <div class="content">
+
+    <!-- LOG TAB -->
+    <div id="tab-log" class="screen active">
+      <div id="install-banner" class="install-banner">
+        <div class="install-icon">📲</div>
+        <div class="install-text">
+          <div class="install-title">Install on iPhone</div>
+          <div class="install-desc">Tap <strong>Share</strong> → <strong>Add to Home Screen</strong> to install this app on your iPhone. It works offline, no App Store needed.</div>
+        </div>
+        <button class="install-close" onclick="hideBanner()">×</button>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">This month</div>
+          <div class="stat-val" id="s-spent">$0.00</div>
+          <div class="stat-sub" id="s-km">0 km driven</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">CRA deduction</div>
+          <div class="stat-val green" id="s-deduct">$0.00</div>
+          <div class="stat-sub">estimated claim</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-section">Add entry</div>
+
+        <div class="field">
+          <div class="field-label">Category</div>
+          <select id="cat" onchange="catChanged()">
+            <option value="mileage">🚗  Mileage / KM</option>
+            <option value="maintenance">🔧  Car Maintenance</option>
+            <option value="repair">🛠  Car Repair</option>
+            <option value="fuel">⛽  Fuel / Gas</option>
+            <option value="phone">📱  Phone Bill</option>
+            <option value="meals">🍽  Meals (business)</option>
+          </select>
+        </div>
+
+        <div id="f-mileage">
+          <div class="field">
+            <div class="field-label">KM driven</div>
+            <input type="number" id="km" placeholder="e.g. 85" min="0" inputmode="decimal">
+          </div>
+          <div class="field">
+            <div class="field-label">Purpose / destination</div>
+            <input type="text" id="purpose" placeholder="e.g. Client visit – downtown Edmonton" autocomplete="off">
+          </div>
+        </div>
+
+        <div id="f-expense" style="display:none">
+          <div class="field-row2">
+            <div>
+              <div class="field-label">Amount ($)</div>
+              <input type="number" id="amount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+            </div>
+            <div>
+              <div class="field-label">Vendor / notes</div>
+              <input type="text" id="vendor" placeholder="e.g. Petro-Canada" autocomplete="off">
+            </div>
+          </div>
+          <div id="meals-note" style="display:none" class="info-note">CRA rule: only 50% of business meal costs are deductible. Full amount is recorded; 50% applied to your deduction total.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Date</div>
+          <input type="date" id="edate">
+        </div>
+
+        <button class="btn-primary" onclick="addEntry()">Save Entry</button>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="tab-history" class="screen">
+      <div class="filter-row">
+        <div class="filter-label">Month:</div>
+        <select id="h-month" onchange="renderHistory()"><option value="all">All entries</option></select>
+      </div>
+      <div id="history-list"><div class="no-data"><div class="no-data-icon">📋</div>No entries yet.<br>Start logging your expenses!</div></div>
+    </div>
+
+    <!-- REPORT TAB -->
+    <div id="tab-report" class="screen">
+      <div class="filter-row">
+        <div class="filter-label">Period:</div>
+        <select id="r-month" onchange="renderReport()"><option value="all">All time</option></select>
+      </div>
+      <div id="report-body"><div class="no-data"><div class="no-data-icon">📊</div>No data yet.</div></div>
+    </div>
+
+    <!-- EXPORT TAB -->
+    <div id="tab-export" class="screen">
+      <div class="filter-row">
+        <div class="filter-label">Period:</div>
+        <select id="e-month" onchange="renderExport()"><option value="all">All time</option></select>
+      </div>
+      <div id="export-body"><div class="no-data"><div class="no-data-icon">📤</div>No data to export.</div></div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CRA_KM = 0.73;
+const CATS = {
+  mileage:     { label:'Mileage/KM',   color:'#60a5fa' },
+  maintenance: { label:'Maintenance',  color:'#4ade80' },
+  repair:      { label:'Car Repair',   color:'#f87171' },
+  fuel:        { label:'Fuel/Gas',     color:'#fbbf24' },
+  phone:       { label:'Phone Bill',   color:'#a78bfa' },
+  meals:       { label:'Meals',        color:'#f472b6' }
+};
+
+let data = [];
+try { data = JSON.parse(localStorage.getItem('expv3')||'[]'); } catch(e){}
+
+function save(){ try{ localStorage.setItem('expv3', JSON.stringify(data)); }catch(e){} }
+function today(){ return new Date().toISOString().slice(0,10); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmt(n){ return '$'+parseFloat(n||0).toFixed(2); }
+function monthKey(d){ return d.slice(0,7); }
+function monthLabel(k){
+  const [y,m]=k.split('-');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+y;
+}
+
+document.getElementById('edate').value = today();
+
+function hideBanner(){
+  document.getElementById('install-banner').style.display='none';
+  localStorage.setItem('banner_hidden','1');
+}
+if(localStorage.getItem('banner_hidden')||window.navigator.standalone){
+  document.getElementById('install-banner').style.display='none';
+}
+
+function catChanged(){
+  const c=document.getElementById('cat').value;
+  document.getElementById('f-mileage').style.display=c==='mileage'?'block':'none';
+  document.getElementById('f-expense').style.display=c!=='mileage'?'block':'none';
+  document.getElementById('meals-note').style.display=c==='meals'?'block':'none';
+}
+
+function showTab(id){
+  const ids=['log','history','report','export'];
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',ids[i]===id));
+  ids.forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===id);
+  });
+  if(id==='history') renderHistory();
+  if(id==='report')  renderReport();
+  if(id==='export')  renderExport();
+  if(id==='log')     updateStats();
+}
+
+function addEntry(){
+  const cat=document.getElementById('cat').value;
+  const date=document.getElementById('edate').value;
+  if(!date){toast('Select a date');return;}
+  let e={id:Date.now(),cat,date};
+
+  if(cat==='mileage'){
+    const km=parseFloat(document.getElementById('km').value);
+    const pu=document.getElementById('purpose').value.trim();
+    if(isNaN(km)||km<=0){toast('Enter KM driven');return;}
+    if(!pu){toast('Enter trip purpose');return;}
+    e.km=km; e.purpose=pu; e.amount=parseFloat((km*CRA_KM).toFixed(2));
+  } else {
+    const amt=parseFloat(document.getElementById('amount').value);
+    const vnd=document.getElementById('vendor').value.trim();
+    if(isNaN(amt)||amt<=0){toast('Enter amount');return;}
+    if(!vnd){toast('Enter vendor / notes');return;}
+    e.amount=amt; e.vendor=vnd;
+    e.deductible=cat==='meals'?parseFloat((amt*0.5).toFixed(2)):amt;
+  }
+
+  data.unshift(e); save(); updateStats(); syncSelects();
+  ['km','purpose','amount','vendor'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('edate').value=today();
+  toast('Entry saved ✓');
+}
+
+function delEntry(id){
+  data=data.filter(e=>e.id!==id); save(); updateStats(); syncSelects();
+  renderHistory(); renderReport(); renderExport(); toast('Deleted');
+}
+
+function syncSelects(){
+  const months=[...new Set(data.map(e=>monthKey(e.date)))].sort().reverse();
+  [['h-month','All entries'],['r-month','All time'],['e-month','All time']].forEach(([sid,lbl])=>{
+    const sel=document.getElementById(sid);
+    const cur=sel.value;
+    sel.innerHTML=`<option value="all">${lbl}</option>`;
+    months.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=monthLabel(m);sel.appendChild(o);});
+    if(months.includes(cur)) sel.value=cur;
+  });
+}
+
+function filteredData(selId){ const v=document.getElementById(selId).value; return v==='all'?data:data.filter(e=>e.date.startsWith(v)); }
+
+function updateStats(){
+  const now=today().slice(0,7);
+  const m=data.filter(e=>e.date.startsWith(now));
+  const km=m.filter(e=>e.cat==='mileage').reduce((a,e)=>a+e.km,0);
+  const spent=m.filter(e=>e.cat!=='mileage').reduce((a,e)=>a+e.amount,0);
+  const ded=parseFloat((km*CRA_KM+m.filter(e=>e.cat!=='mileage').reduce((a,e)=>a+(e.deductible||e.amount),0)).toFixed(2));
+  document.getElementById('s-spent').textContent=fmt(spent);
+  document.getElementById('s-km').textContent=km.toFixed(1)+' km driven';
+  document.getElementById('s-deduct').textContent=fmt(ded);
+}
+
+function renderHistory(){
+  const list=filteredData('h-month');
+  const el=document.getElementById('history-list');
+  if(!list.length){el.innerHTML='<div class="no-data"><div class="no-data-icon">📋</div>No entries for this period.</div>';return;}
+  const byMonth={};
+  list.forEach(e=>{const k=monthKey(e.date);if(!byMonth[k])byMonth[k]=[];byMonth[k].push(e);});
+  el.innerHTML=Object.keys(byMonth).sort().reverse().map(mk=>{
+    const mes=byMonth[mk];
+    const mTotal=mes.reduce((a,e)=>a+e.amount,0);
+    const byDay={};
+    mes.forEach(e=>{if(!byDay[e.date])byDay[e.date]=[];byDay[e.date].push(e);});
+    const rows=Object.keys(byDay).sort().reverse().map(day=>{
+      const dl=new Date(day+'T12:00').toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});
+      return `<div style="padding:6px 14px 2px;font-size:11px;color:var(--text3);font-family:var(--mono)">${dl}</div>`
+        +byDay[day].map(e=>{
+          const c=CATS[e.cat];
+          const desc=e.cat==='mileage'?esc(e.purpose):esc(e.vendor);
+          const sub=e.cat==='mileage'?e.km.toFixed(1)+' km':(e.cat==='meals'?'50% ded.':'');
+          return `<div class="entry">
+            <div class="entry-left">
+              <div class="cat-pill" style="background:${c.color}"></div>
+              <div class="entry-info">
+                <div class="entry-name">${desc}</div>
+                <div class="entry-meta">${c.label}${sub?' · '+sub:''}</div>
+              </div>
+            </div>
+            <div class="entry-right">
+              <div class="entry-amt">${fmt(e.amount)}</div>
+              <button class="del-btn" onclick="delEntry(${e.id})">×</button>
+            </div>
+          </div>`;
+        }).join('');
+    }).join('');
+    return `<div class="list-card">
+      <div class="list-header"><div class="list-month">${monthLabel(mk)}</div><div class="list-month-total">${fmt(mTotal)}</div></div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+function renderReport(){
+  const list=filteredData('r-month');
+  const el=document.getElementById('report-body');
+  if(!list.length){el.innerHTML='<div class="no-data"><div class="no-data-icon">📊</div>No data for this period.</div>';return;}
+  const totalKm=list.filter(e=>e.cat==='mileage').reduce((a,e)=>a+e.km,0);
+  const kmDed=parseFloat((totalKm*CRA_KM).toFixed(2));
+  const expSpent=list.filter(e=>e.cat!=='mileage').reduce((a,e)=>a+e.amount,0);
+  const expDed=list.filter(e=>e.cat!=='mileage').reduce((a,e)=>a+(e.deductible||e.amount),0);
+  const totalDed=parseFloat((kmDed+expDed).toFixed(2));
+  const trips=list.filter(e=>e.cat==='mileage').length;
+  const byType={};Object.keys(CATS).forEach(k=>{byType[k]=0;});
+  list.forEach(e=>{byType[e.cat]+=(e.cat!=='mileage'?(e.deductible||e.amount):e.amount);});
+  const maxV=Math.max(...Object.values(byType),1);
+  const selV=document.getElementById('r-month').value;
+  const period=selV==='all'?'All time':monthLabel(selV);
+  const byMonth={};
+  list.forEach(e=>{const k=monthKey(e.date);if(!byMonth[k])byMonth[k]=[];byMonth[k].push(e);});
+  const mKeys=Object.keys(byMonth).sort();
+
+  el.innerHTML=`
+    <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:14px;letter-spacing:-0.3px">${period}</div>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-label">KM driven</div><div class="stat-val">${totalKm.toFixed(1)}</div><div class="stat-sub">${trips} trips</div></div>
+      <div class="stat-card"><div class="stat-label">KM deduction</div><div class="stat-val green">${fmt(kmDed)}</div><div class="stat-sub">@ $0.73/km</div></div>
+      <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-val">${fmt(expSpent)}</div><div class="stat-sub">amount paid</div></div>
+      <div class="stat-card"><div class="stat-label">Total deduction</div><div class="stat-val green">${fmt(totalDed)}</div><div class="stat-sub">CRA estimate</div></div>
+    </div>
+    <div class="form-card">
+      <div class="section-title">Deductible by category</div>
+      ${Object.entries(CATS).map(([k,c])=>byType[k]>0?`
+        <div class="bar-row">
+          <div class="bar-label">${c.label}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(byType[k]/maxV*100)}%;background:${c.color}"></div></div>
+          <div class="bar-val">${fmt(byType[k])}</div>
+        </div>`:''
+      ).join('')}
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;font-family:var(--mono)">Meals shown at 50% CRA deductible</div>
+    </div>
+    ${mKeys.length>1?`<div class="form-card">
+      <div class="section-title">Monthly breakdown</div>
+      <table class="mth-table">
+        <tr><th>Month</th><th>KM</th><th>Expenses</th><th>Deduction</th></tr>
+        ${mKeys.map(mk=>{
+          const mes=byMonth[mk];
+          const km=mes.filter(e=>e.cat==='mileage').reduce((a,e)=>a+e.km,0);
+          const exp=mes.filter(e=>e.cat!=='mileage').reduce((a,e)=>a+e.amount,0);
+          const ded=parseFloat((km*CRA_KM+mes.filter(e=>e.cat!=='mileage').reduce((a,e)=>a+(e.deductible||e.amount),0)).toFixed(2));
+          return `<tr><td>${monthLabel(mk)}</td><td>${km.toFixed(0)}</td><td>${fmt(exp)}</td><td>${fmt(ded)}</td></tr>`;
+        }).join('')}
+        <tr class="total"><td>Total</td><td>${totalKm.toFixed(0)}</td><td>${fmt(expSpent)}</td><td>${fmt(totalDed)}</td></tr>
+      </table>
+    </div>`:''}
+    <div class="form-card">
+      <div class="section-title">CRA mileage log (${trips} trips)</div>
+      ${trips===0?'<div style="font-size:13px;color:var(--text3)">No mileage entries.</div>':
+        list.filter(e=>e.cat==='mileage').map(e=>`
+          <div class="entry" style="padding:10px 0">
+            <div class="entry-left">
+              <div class="entry-info">
+                <div class="entry-name">${esc(e.purpose)}</div>
+                <div class="entry-meta">${e.date}</div>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div class="entry-amt">${e.km.toFixed(1)} km</div>
+              <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${fmt(e.amount)}</div>
+            </div>
+          </div>`).join('')
+      }
+    </div>`;
+}
+
+function renderExport(){
+  const list=filteredData('e-month');
+  const el=document.getElementById('export-body');
+  if(!list.length){el.innerHTML='<div class="no-data"><div class="no-data-icon">📤</div>No data to export.</div>';return;}
+  const selV=document.getElementById('e-month').value;
+  const period=selV==='all'?'All time':monthLabel(selV);
+  const totalKm=list.filter(e=>e.cat==='mileage').reduce((a,e)=>a+e.km,0);
+  const totalDed=parseFloat((totalKm*CRA_KM+list.filter(e=>e.cat!=='mileage').reduce((a,e)=>a+(e.deductible||e.amount),0)).toFixed(2));
+  const header='Date,Category,Description,KM,Amount ($),CRA Deductible ($)';
+  const rows=[...list].sort((a,b)=>a.date.localeCompare(b.date)).map(e=>{
+    const desc=e.cat==='mileage'?e.purpose:e.vendor;
+    return [e.date,CATS[e.cat].label,'"'+String(desc).replace(/"/g,'""')+'"',
+      e.cat==='mileage'?e.km.toFixed(1):'',e.amount.toFixed(2),(e.cat==='mileage'?e.amount:(e.deductible||e.amount)).toFixed(2)].join(',');
+  });
+  const csv=[header,...rows].join('\n');
+  window._csv=csv;
+
+  el.innerHTML=`
+    <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;letter-spacing:-0.3px">Export: ${period}</div>
+    <div style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-bottom:14px">${list.length} entries · ${totalKm.toFixed(1)} km · Est. deduction ${fmt(totalDed)}</div>
+    <div class="form-card">
+      <div class="section-title">CSV preview</div>
+      <div class="csv-box">${csv.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+      <button class="btn-primary" onclick="copyCSV()" style="margin-bottom:8px">Copy to clipboard</button>
+      <button class="btn-secondary" onclick="dlCSV()">Download CSV file</button>
+    </div>
+    <div class="form-card">
+      <div class="section-title">What's included</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.8">
+        ✓ &nbsp;Mileage at $0.73/km (CRA 2026 rate)<br>
+        ✓ &nbsp;Meals at 50% (CRA rule)<br>
+        ✓ &nbsp;All other expenses at 100%<br>
+        ✓ &nbsp;Ready to give to your accountant<br>
+        ✓ &nbsp;Compatible with TurboTax, Wealthsimple Tax
+      </div>
+    </div>`;
+}
+
+function copyCSV(){
+  navigator.clipboard.writeText(window._csv||'').then(()=>toast('Copied to clipboard ✓')).catch(()=>toast('Copy failed – try download'));
+}
+function dlCSV(){
+  const selV=document.getElementById('e-month').value;
+  const period=selV==='all'?'all-time':selV;
+  const blob=new Blob([window._csv||''],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='expenses-'+period+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('Downloading...');
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+syncSelects(); updateStats();
+</script>
+</body>
+</html>
